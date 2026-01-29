@@ -4,7 +4,9 @@
     "source.organizeImports": "explicit",
     "source.sortMembers": "explicit"
   },
- "files.associations": {
-  "*.css": "tailwindcss"
-}
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "terminal.integrated.env.windows": {},
+  "terminal.integrated.defaultProfile.windows": "Git Bash"
 }
