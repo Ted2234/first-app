@@ -12,6 +12,7 @@ export default function VideoPlayer({ movieId, posterUri }: VideoPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
 
   // Construct the Embed URL
+  const ALLOWED_HOST = "vidsrcme.ru";
   const videoSource = `https://vidsrcme.ru/embed/movie?tmdb=${movieId}`;
 
   return (

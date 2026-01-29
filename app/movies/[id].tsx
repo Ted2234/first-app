@@ -78,7 +78,7 @@ const MovieDetails = () => {
               "N/A"
             }
           />
-          <View className="flex-1 mt-5">
+          <View className="flex-1 mt-5 mb-10 h-60">
             <VideoPlayer
               movieId={id as string}
               posterUri={
