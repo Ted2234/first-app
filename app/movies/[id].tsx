@@ -78,8 +78,15 @@ const MovieDetails = () => {
               "N/A"
             }
           />
-          <View className="flex-1">
-            <VideoPlayer />
+          <View className="flex-1 mt-5">
+            <VideoPlayer
+              movieId={id as string}
+              posterUri={
+                movie?.poster_path
+                  ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+                  : undefined
+              }
+            />
           </View>
         </View>
       </ScrollView>

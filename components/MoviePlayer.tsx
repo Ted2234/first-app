@@ -1,60 +1,57 @@
-import { useVideoPlayer, VideoView } from "expo-video";
+import { icons } from "@/constants/icons"; // Import your icons
 import React, { useState } from "react";
-import { Image, Pressable, StyleSheet, View } from "react-native";
+import { Image, Pressable, View } from "react-native";
+import { WebView } from "react-native-webview";
 
-export default function VideoPlayer() {
-  const [showPoster, setShowPoster] = useState(true);
-  const playbackId = "OfjbQ3esQifgboENTs4oDXslCP5sSnst";
-  const videoSource = `https://stream.mux.com/${playbackId}.m3u8`;
-  const posterSource = `https://image.mux.com/${playbackId}/thumbnail.png?time=0`;
+interface VideoPlayerProps {
+  movieId: string | number;
+  posterUri?: string;
+}
 
-  const player = useVideoPlayer(videoSource, (player) => {
-    player.loop = false;
-    // Don't autoplay - wait for user to tap poster
-  });
+export default function VideoPlayer({ movieId, posterUri }: VideoPlayerProps) {
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  const handlePosterPress = () => {
-    setShowPoster(false);
-    player.play();
-  };
+  // Construct the Embed URL
+  const videoSource = `https://vidsrcme.ru/embed/movie?tmdb=${movieId}`;
 
   return (
-    <View className="flex-1 justify-center items-center bg-black">
-      <VideoView
-        player={player}
-        className="w-100% aspect-video"
-        allowsFullscreen
-        allowsPictureInPicture
-        nativeControls
-        contentFit="contain"
-      />
-      {showPoster && (
-        <Pressable onPress={handlePosterPress} style={styles.poster}>
-          <Image
-            className="absolute w-full aspect-video"
-            source={{ uri: posterSource }}
-            resizeMode="cover"
-          />
+    <View className="w-full aspect-video bg-black overflow-hidden rounded-lg relative">
+      {!isPlaying ? (
+        <Pressable
+          onPress={() => setIsPlaying(true)}
+          className="flex-1 justify-center items-center"
+        >
+          {/* Background Poster */}
+          {posterUri ? (
+            <Image
+              source={{ uri: posterUri }}
+              className="absolute w-full h-full"
+              resizeMode="cover"
+            />
+          ) : null}
+
+          {/* Play Button Overlay */}
+          <View className="w-12 h-12 bg-black/50 rounded-full justify-center items-center backdrop-blur-sm">
+            <Image
+              source={icons.play}
+              className="w-6 h-6 ml-1"
+              tintColor="white"
+              resizeMode="contain"
+            />
+          </View>
         </Pressable>
+      ) : (
+        <WebView
+          source={{ uri: videoSource }}
+          className="flex-1 bg-black"
+          allowsFullscreenVideo={true}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          scrollEnabled={false}
+          // Optional: Improve Android playback
+          androidLayerType="hardware"
+        />
       )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#000",
-  },
-  video: {
-    width: "100%",
-    aspectRatio: 16 / 9,
-  },
-  poster: {
-    position: "absolute",
-    width: "100%",
-    aspectRatio: 16 / 9,
-  },
-});
