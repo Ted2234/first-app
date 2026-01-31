@@ -29,7 +29,7 @@ export default function Profile() {
   });
 
   // Add stats state
-  const [stats, setStats] = useState({ saved: 0, history: 0 });
+  const [stats, setStats] = useState({ saved: 0 });
 
   // 2. NEW: Fetch stats when the screen comes into focus
   useFocusEffect(
@@ -53,7 +53,6 @@ export default function Profile() {
       // C. Update State
       setStats({
         saved: savedDocs.length,
-        history: historyArray.length,
       });
     } catch (error) {
       console.log("Error loading stats:", error);
@@ -156,13 +155,6 @@ export default function Profile() {
                     {stats.saved}
                   </Text>
                   <Text className="text-gray-400 text-xs">Saved</Text>
-                </View>
-                <View className="w-[1px] h-full bg-white/10" />
-                <View className="items-center flex-1">
-                  <Text className="text-white text-xl font-bold">
-                    {stats.history}
-                  </Text>
-                  <Text className="text-gray-400 text-xs">History</Text>
                 </View>
               </View>
 

@@ -11,9 +11,12 @@ interface VideoPlayerProps {
 export default function VideoPlayer({ movieId, posterUri }: VideoPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // Construct the Embed URL
-  const ALLOWED_HOST = "vidsrcme.ru";
-  const videoSource = `https://vidsrcme.ru/embed/movie?tmdb=${movieId}`;
+// Construct the Embed URL
+const ALLOWED_HOST = "vidsrcme.ru";
+const videoSource = `https://vidsrcme.ru/embed/movie?tmdb=${movieId}`;
+
+
+
 
   return (
     <View className="w-full aspect-video bg-black overflow-hidden rounded-lg relative">
@@ -42,7 +45,7 @@ export default function VideoPlayer({ movieId, posterUri }: VideoPlayerProps) {
           </View>
         </Pressable>
       ) : (
-        <WebView
+        <WebView 
           source={{ uri: videoSource }}
           className="flex-1 bg-black"
           allowsFullscreenVideo={true}

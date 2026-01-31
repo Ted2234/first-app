@@ -62,9 +62,7 @@
   },
   "expo": {
     "install": {
-      "exclude": [
-        "expo-file-system"
-      ]
+      "exclude": []
     }
   },
   "private": true

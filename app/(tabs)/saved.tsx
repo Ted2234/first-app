@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import "../global.css";
 
 export default function Saved() {
   const { user, isLogged, loading: isGlobalLoading } = useGlobalContext();
