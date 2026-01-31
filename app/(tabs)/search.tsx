@@ -5,12 +5,21 @@ import { images } from "@/constants/images";
 import { fetchMovies } from "@/services/api";
 import { updateSearchCount } from "@/services/appwrite";
 import useFetch from "@/services/useFetch";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Image, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  Image,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import "../global.css";
 
-const search = () => {
+export default function Search() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
 
   const {
     data: movies,
@@ -19,6 +28,51 @@ const search = () => {
     refetch: loadMovies,
     reset,
   } = useFetch(() => fetchMovies({ query: searchQuery }), false);
+
+  // 1. Load History on Mount
+  useEffect(() => {
+    loadHistory();
+  }, []);
+
+  const loadHistory = async () => {
+    try {
+      const historyJson = await AsyncStorage.getItem("search_history");
+      if (historyJson) {
+        setSearchHistory(JSON.parse(historyJson));
+      }
+    } catch (e) {
+      console.log("Failed to load history", e);
+    }
+  };
+
+  // 2. Save Query to History
+  const handleSearchSubmit = async () => {
+    if (!searchQuery.trim()) return;
+
+    try {
+      // Create new history: Remove duplicate of current query, add to top, keep max 10
+      const newHistory = [
+        searchQuery,
+        ...searchHistory.filter((h) => h !== searchQuery),
+      ].slice(0, 10);
+
+      setSearchHistory(newHistory);
+      await AsyncStorage.setItem("search_history", JSON.stringify(newHistory));
+    } catch (e) {
+      console.log("Failed to save history", e);
+    }
+  };
+
+  // 3. Handle History Item Click
+  const handleHistoryPress = (term: string) => {
+    setSearchQuery(term);
+  };
+
+  // 4. Clear History (Optional utility)
+  const clearHistory = async () => {
+    setSearchHistory([]);
+    await AsyncStorage.removeItem("search_history");
+  };
 
   useEffect(() => {
     const timeoutId = setTimeout(async () => {
@@ -69,6 +123,7 @@ const search = () => {
                 placeholder="Search movies..."
                 value={searchQuery}
                 onChangeText={(text: string) => setSearchQuery(text)}
+                onSubmit={handleSearchSubmit}
               />
             </View>
 
@@ -96,16 +151,45 @@ const search = () => {
         }
         ListEmptyComponent={
           !loading && !error ? (
-            <View className="mt-10 px-5">
-              <Text className="text-center text-gray-500">
-                {searchQuery.trim() ? "No movies found" : "Search for a movie"}
-              </Text>
+            <View className="mt-2 px-2">
+              {/* Show History if query is empty AND history exists */}
+              {!searchQuery.trim() && searchHistory.length > 0 ? (
+                <View>
+                  <View className="flex-row justify-between items-center mb-4">
+                    <Text className="text-white text-lg font-bold">
+                      Recent Searches
+                    </Text>
+                    <TouchableOpacity onPress={clearHistory}>
+                      <Text className="text-gray-400 text-sm">Clear</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {searchHistory.map((term, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      onPress={() => handleHistoryPress(term)}
+                      className="flex-row items-center py-3 border-b border-white/10"
+                    >
+                      <Image
+                        source={icons.search}
+                        className="size-4 mr-3"
+                        tintColor="#9CA3AF" // gray-400
+                      />
+                      <Text className="text-gray-300 text-base">{term}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ) : (
+                <Text className="text-center text-gray-500 mt-8">
+                  {searchQuery.trim()
+                    ? "No movies found"
+                    : "Search for a movie"}
+                </Text>
+              )}
             </View>
           ) : null
         }
       />
     </View>
   );
-};
-
-export default search;
+}

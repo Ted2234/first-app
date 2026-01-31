@@ -6,7 +6,8 @@ import { images } from "@/constants/images";
 import { fetchMovies } from "@/services/api";
 import { getTrendingMovies } from "@/services/appwrite";
 import useFetch from "@/services/useFetch";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -24,13 +25,22 @@ export default function Index() {
     data: trendingMovies,
     loading: trendingLoading,
     error: trendingError,
-  } = useFetch(getTrendingMovies);
+    refetch: loadTrending,
+  } = useFetch(getTrendingMovies, false);
 
   const {
     data: movies,
     loading: moviesLoading,
     error: moviesError,
-  } = useFetch(() => fetchMovies({ query: "" }));
+    refetch: loadMovies,
+  } = useFetch(() => fetchMovies({ query: "" }), false);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadTrending();
+      loadMovies();
+    }, []),
+  );
 
   return (
     <View className="flex-1 bg-primary">
