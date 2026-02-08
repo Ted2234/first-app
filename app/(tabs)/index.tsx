@@ -7,7 +7,7 @@ import { fetchMovies } from "@/services/api";
 import { getTrendingMovies } from "@/services/appwrite";
 import useFetch from "@/services/useFetch";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback } from "react";
+import React, { useCallback } from "react";
 import {
   ActivityIndicator,
   FlatList,
