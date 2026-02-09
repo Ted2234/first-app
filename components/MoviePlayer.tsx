@@ -1,6 +1,6 @@
 import { icons } from "@/constants/icons"; // Import your icons
 import React, { useState } from "react";
-import { Image, Pressable, View } from "react-native";
+import { Image, Platform, Pressable, View } from "react-native";
 import { WebView } from "react-native-webview";
 
 interface VideoPlayerProps {
@@ -26,6 +26,19 @@ export default function VideoPlayer({
     type === "tv"
       ? `https://vidsrcme.ru/embed/tv?tmdb=${movieId}&season=${season}&episode=${episode}`
       : `https://vidsrcme.ru/embed/movie?tmdb=${movieId}`;
+
+  if (Platform.OS === "web") {
+    return (
+      <View className="w-full aspect-video bg-black overflow-hidden rounded-lg relative z-50">
+        <iframe
+          src={videoSource}
+          style={{ width: "100%", height: "100%", border: "none" }}
+          allowFullScreen
+          allow="autoplay; encrypted-media"
+        />
+      </View>
+    );
+  }
 
   return (
     <View className="w-full aspect-video bg-black overflow-hidden rounded-lg relative">
