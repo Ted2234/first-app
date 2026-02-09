@@ -60,7 +60,6 @@ const MovieDetails = () => {
     }
 
     try {
-      // Fetch all saved movies for this user
       const savedMovies = await getSavedMovies(user.$id);
 
       // Look for a match
