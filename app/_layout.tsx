@@ -1,5 +1,6 @@
 import GlobalProvider from "@/lib/global-provider";
 import { Stack } from "expo-router";
+import React from "react";
 import { StatusBar } from "react-native";
 import "./global.css";
 
