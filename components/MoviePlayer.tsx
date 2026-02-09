@@ -6,17 +6,26 @@ import { WebView } from "react-native-webview";
 interface VideoPlayerProps {
   movieId: string | number;
   posterUri?: string;
+  type?: "movie" | "tv";
+  season?: number;
+  episode?: number;
 }
 
-export default function VideoPlayer({ movieId, posterUri }: VideoPlayerProps) {
+export default function VideoPlayer({
+  movieId,
+  posterUri,
+  type,
+  season,
+  episode,
+}: VideoPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
 
-// Construct the Embed URL
-const ALLOWED_HOST = "vidsrcme.ru";
-const videoSource = `https://vidsrcme.ru/embed/movie?tmdb=${movieId}`;
-
-
-
+  // Construct the Embed URL
+  const ALLOWED_HOST = "vidsrcme.ru";
+  const videoSource =
+    type === "tv"
+      ? `https://vidsrcme.ru/embed/tv?tmdb=${movieId}&season=${season}&episode=${episode}`
+      : `https://vidsrcme.ru/embed/movie?tmdb=${movieId}`;
 
   return (
     <View className="w-full aspect-video bg-black overflow-hidden rounded-lg relative">
@@ -45,7 +54,7 @@ const videoSource = `https://vidsrcme.ru/embed/movie?tmdb=${movieId}`;
           </View>
         </Pressable>
       ) : (
-        <WebView 
+        <WebView
           source={{ uri: videoSource }}
           className="flex-1 bg-black"
           allowsFullscreenVideo={true}

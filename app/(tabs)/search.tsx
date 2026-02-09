@@ -2,10 +2,12 @@ import MovieCard from "@/components/MovieCard";
 import SearchBar from "@/components/SearchBar";
 import { icons } from "@/constants/icons";
 import { images } from "@/constants/images";
-import { fetchMovies } from "@/services/api";
+import { fetchMovies, fetchShows } from "@/services/api";
 import { updateSearchCount } from "@/services/appwrite";
 import useFetch from "@/services/useFetch";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+// 1. Import useLocalSearchParams
+import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -20,16 +22,36 @@ import "../global.css";
 export default function Search() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const [searchType, setSearchType] = useState<"movie" | "tv">("movie");
+
+  // 2. Get parameters from the URL/Route
+  const params = useLocalSearchParams<{ type?: string }>();
+
+  // 3. Effect: Check if a 'type' param was passed (e.g. from Shows tab)
+  useEffect(() => {
+    if (params.type === "tv") {
+      setSearchType("tv");
+    } else if (params.type === "movie") {
+      setSearchType("movie");
+    }
+  }, [params.type]);
+
+  // Dynamic Fetch Logic
+  const fetchFunction =
+    searchType === "movie"
+      ? () => fetchMovies({ query: searchQuery })
+      : () => fetchShows({ query: searchQuery });
 
   const {
-    data: movies,
+    data: results,
     loading,
     error,
-    refetch: loadMovies,
+    refetch: loadResults,
     reset,
-  } = useFetch(() => fetchMovies({ query: searchQuery }), false);
+  } = useFetch(fetchFunction, false);
 
-  // 1. Load History on Mount
+  // ... (Keep existing loadHistory, handleSearchSubmit, etc.) ...
+
   useEffect(() => {
     loadHistory();
   }, []);
@@ -45,17 +67,13 @@ export default function Search() {
     }
   };
 
-  // 2. Save Query to History
   const handleSearchSubmit = async () => {
     if (!searchQuery.trim()) return;
-
     try {
-      // Create new history: Remove duplicate of current query, add to top, keep max 10
       const newHistory = [
         searchQuery,
         ...searchHistory.filter((h) => h !== searchQuery),
       ].slice(0, 10);
-
       setSearchHistory(newHistory);
       await AsyncStorage.setItem("search_history", JSON.stringify(newHistory));
     } catch (e) {
@@ -63,12 +81,10 @@ export default function Search() {
     }
   };
 
-  // 3. Handle History Item Click
   const handleHistoryPress = (term: string) => {
     setSearchQuery(term);
   };
 
-  // 4. Clear History (Optional utility)
   const clearHistory = async () => {
     setSearchHistory([]);
     await AsyncStorage.removeItem("search_history");
@@ -77,20 +93,19 @@ export default function Search() {
   useEffect(() => {
     const timeoutId = setTimeout(async () => {
       if (searchQuery.trim()) {
-        await loadMovies();
+        await loadResults();
       } else {
         reset();
       }
     }, 500);
-
     return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
+  }, [searchQuery, searchType]);
 
   useEffect(() => {
-    if (movies?.length > 0 && movies?.[0]) {
-      updateSearchCount(searchQuery, movies[0]);
+    if (results?.length > 0 && results?.[0]) {
+      updateSearchCount(searchQuery, results[0]);
     }
-  }, [movies]);
+  }, [results]);
 
   return (
     <View className="flex-1 bg-primary">
@@ -101,7 +116,7 @@ export default function Search() {
       />
 
       <FlatList
-        data={movies}
+        data={results}
         renderItem={({ item }) => <MovieCard {...item} />}
         keyExtractor={(item) => item.id.toString()}
         className="px-5"
@@ -120,39 +135,80 @@ export default function Search() {
 
             <View className="my-5">
               <SearchBar
-                placeholder="Search movies..."
+                placeholder={`Search ${searchType === "movie" ? "movies" : "TV shows"}...`}
                 value={searchQuery}
                 onChangeText={(text: string) => setSearchQuery(text)}
                 onSubmit={handleSearchSubmit}
               />
             </View>
 
+            {/* Type Selector */}
+            <View className="flex-row justify-center mb-6 gap-4">
+              <TouchableOpacity
+                onPress={() => setSearchType("movie")}
+                className={`px-6 py-2 rounded-full border border-white/10 ${
+                  searchType === "movie" ? "bg-accent" : "bg-black/40"
+                }`}
+              >
+                <Text
+                  className={`${
+                    searchType === "movie"
+                      ? "text-white font-bold"
+                      : "text-gray-400"
+                  }`}
+                >
+                  Movies
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setSearchType("tv")}
+                className={`px-6 py-2 rounded-full border border-white/10 ${
+                  searchType === "tv" ? "bg-accent" : "bg-black/40"
+                }`}
+              >
+                <Text
+                  className={`${
+                    searchType === "tv"
+                      ? "text-white font-bold"
+                      : "text-gray-400"
+                  }`}
+                >
+                  TV Shows
+                </Text>
+              </TouchableOpacity>
+            </View>
+
             {loading && (
               <ActivityIndicator
                 size="large"
-                color="#0000ff"
+                color="#FACC15"
                 className="my-3"
               />
             )}
 
+            {/* ... (Keep existing error and result text logic) ... */}
             {error && (
               <Text className="text-red-500 px-5 my-3">
                 Error: {error.message}
               </Text>
             )}
 
-            {!loading && !error && searchQuery.trim() && movies?.length > 0 && (
-              <Text className="text-xl text-white font-bold">
-                Search Results for{" "}
-                <Text className="text-accent">{searchQuery}</Text>
-              </Text>
-            )}
+            {!loading &&
+              !error &&
+              searchQuery.trim() &&
+              results?.length > 0 && (
+                <Text className="text-xl text-white font-bold">
+                  Search Results for{" "}
+                  <Text className="text-accent">{searchQuery}</Text>
+                </Text>
+              )}
           </>
         }
         ListEmptyComponent={
+          // ... (Keep existing ListEmptyComponent logic) ...
           !loading && !error ? (
             <View className="mt-2 px-2">
-              {/* Show History if query is empty AND history exists */}
               {!searchQuery.trim() && searchHistory.length > 0 ? (
                 <View>
                   <View className="flex-row justify-between items-center mb-4">
@@ -173,7 +229,7 @@ export default function Search() {
                       <Image
                         source={icons.search}
                         className="size-4 mr-3"
-                        tintColor="#9CA3AF" // gray-400
+                        tintColor="#9CA3AF"
                       />
                       <Text className="text-gray-300 text-base">{term}</Text>
                     </TouchableOpacity>
@@ -182,8 +238,8 @@ export default function Search() {
               ) : (
                 <Text className="text-center text-gray-500 mt-8">
                   {searchQuery.trim()
-                    ? "No movies found"
-                    : "Search for a movie"}
+                    ? `No ${searchType === "movie" ? "movies" : "shows"} found`
+                    : `Search for a ${searchType === "movie" ? "movie" : "show"}`}
                 </Text>
               )}
             </View>

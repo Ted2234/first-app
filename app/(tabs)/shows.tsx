@@ -3,11 +3,11 @@ import SearchBar from "@/components/SearchBar";
 import TrendingCard from "@/components/TrendingCard";
 import { icons } from "@/constants/icons";
 import { images } from "@/constants/images";
-import { fetchMovies } from "@/services/api";
-import { getTrendingMovies } from "@/services/appwrite";
+import { fetchShows } from "@/services/api";
+import { getTrendingTV } from "@/services/appwrite";
 import useFetch from "@/services/useFetch";
 import { useFocusEffect, useRouter } from "expo-router";
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -18,28 +18,29 @@ import {
 } from "react-native";
 import "../global.css";
 
-export default function Index() {
+export default function Shows() {
   const router = useRouter();
+  const [query, setQuery] = useState("");
 
   const {
-    data: trendingMovies,
+    data: trendingTV,
     loading: trendingLoading,
     error: trendingError,
     refetch: loadTrending,
-  } = useFetch(getTrendingMovies, false);
+  } = useFetch(getTrendingTV, false);
 
   const {
-    data: movies,
-    loading: moviesLoading,
-    error: moviesError,
-    refetch: loadMovies,
-  } = useFetch(() => fetchMovies({ query: "" }), false);
+    data: shows,
+    loading: showsLoading,
+    error: showsError,
+    refetch: loadShows,
+  } = useFetch(() => fetchShows({ query }), false);
 
   useFocusEffect(
     useCallback(() => {
       loadTrending();
-      loadMovies();
-    }, []),
+      loadShows();
+    }, [query]),
   );
 
   return (
@@ -57,53 +58,57 @@ export default function Index() {
       >
         <Image source={icons.logo} className="w-12 h-10 mt-20 mb-5 mx-auto " />
 
-        {moviesLoading || trendingLoading ? (
+        {showsLoading || trendingLoading ? (
           <ActivityIndicator
             size="large"
             color="#0000ff"
             className="mt-10 self-center"
           />
-        ) : moviesError || trendingError ? (
-          <Text>Error: ${moviesError?.message || trendingError?.message}</Text>
+        ) : showsError || trendingError ? (
+          <Text className="text-red-500 text-center mt-5">
+            Error: {showsError?.message || trendingError?.message}
+          </Text>
         ) : (
           <View className="flex-1 mt-5">
             <SearchBar
               onPress={() =>
-                router.push({ pathname: "/search", params: { type: "movie" } })
+                router.push({ pathname: "/search", params: { type: "tv" } })
               }
-              placeholder="Search for a movie"
-              value={""}
-              onChangeText={function (text: string): void {
-                throw new Error("Function not implemented.");
-              }}
+              placeholder="Search for a TV show"
+              value={query}
+              onChangeText={(text) => setQuery(text)}
             />
 
-            {trendingMovies && (
+            {/* Trending TV Section */}
+            {!query && trendingTV && trendingTV.length > 0 && (
               <View className="mt-10">
-                <Text className="text-lf text-white font-bold mb-3">
-                  Trending Movies
+                <Text className="text-lg text-white font-bold mb-3">
+                  Trending TV Shows
                 </Text>
                 <FlatList
                   horizontal
                   showsHorizontalScrollIndicator={false}
                   ItemSeparatorComponent={() => <View className="w-4" />}
                   className="mb-4 mt-3"
-                  data={trendingMovies}
+                  data={trendingTV}
                   renderItem={({ item, index }) => (
                     <TrendingCard movie={item} index={index} />
                   )}
-                  keyExtractor={(item) => item.movie_id.toString()}
+                  keyExtractor={(item, index) =>
+                    item.movie_id?.toString() || index.toString()
+                  }
                 />
               </View>
             )}
 
-            <>
-              <Text className="text-lf text-white font-bold mt-5 mb-3">
-                Latest movies
+            {/* TV Shows Grid */}
+            <View>
+              <Text className="text-lg text-white font-bold mt-5 mb-3">
+                {query ? "Search Results" : "Latest TV Shows"}
               </Text>
 
               <FlatList
-                data={movies}
+                data={shows}
                 renderItem={({ item }) => <MovieCard {...item} />}
                 keyExtractor={(item) => item.id.toString()}
                 numColumns={3}
@@ -116,7 +121,7 @@ export default function Index() {
                 className="mt-2 pb-32"
                 scrollEnabled={false}
               />
-            </>
+            </View>
           </View>
         )}
       </ScrollView>

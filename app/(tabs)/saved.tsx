@@ -1,7 +1,7 @@
 import MovieCard from "@/components/MovieCard";
 import { icons } from "@/constants/icons";
 import { images } from "@/constants/images";
-import { useGlobalContext } from "@/lib/global-provider"; // <--- 1. Get User Context
+import { useGlobalContext } from "@/lib/global-provider";
 import { getSavedMovies } from "@/services/appwrite";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useState } from "react";
@@ -20,13 +20,12 @@ export default function Saved() {
   const [savedMovies, setSavedMovies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Reload the list whenever the user navigates to this screen
   useFocusEffect(
     useCallback(() => {
       if (isLogged && user) {
         loadSavedMovies();
       } else {
-        setLoading(false); // Stop loading if guest
+        setLoading(false);
       }
     }, [isLogged, user]),
   );
@@ -35,18 +34,18 @@ export default function Saved() {
     try {
       setLoading(true);
 
-      // Fetch from Appwrite Database
       const result = await getSavedMovies(user.$id);
 
-      // 4. DATA MAPPING
-      // The DB returns 'movie_id', but MovieCard expects 'id'.
-      // We map the data to match the component's needs.
+      // MAPPING DATA
       const mappedMovies = result.map((doc: any) => ({
-        id: doc.movie_id, // <--- CRITICAL FIX
+        id: doc.movie_id,
         title: doc.title,
         poster_path: doc.poster_path,
         vote_average: doc.vote_average,
         release_date: doc.release_date,
+        // 1. CRITICAL ADDITION: Pass the type from DB to the Card
+        // If 'type' is missing (old saves), default to 'movie'
+        media_type: doc.type || "movie",
       }));
 
       setSavedMovies(mappedMovies);
@@ -57,16 +56,14 @@ export default function Saved() {
     }
   };
 
-  // 5. LOADING STATE
   if (isGlobalLoading || (isLogged && loading)) {
     return (
       <View className="flex-1 bg-primary justify-center items-center">
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="#FACC15" />
       </View>
     );
   }
 
-  // 6. GUEST STATE (Not Logged In)
   if (!isLogged) {
     return (
       <View className="flex-1 bg-primary">
@@ -89,7 +86,7 @@ export default function Saved() {
           </Text>
 
           <TouchableOpacity
-            onPress={() => router.push("/profile")} // Send to Profile Tab
+            onPress={() => router.push("/profile")}
             className="bg-accent px-8 py-4 rounded-xl"
           >
             <Text className="text-primary font-bold text-lg">Go to Login</Text>
@@ -99,7 +96,6 @@ export default function Saved() {
     );
   }
 
-  // 7. USER STATE (Logged In)
   return (
     <View className="flex-1 bg-primary">
       <Image
@@ -117,6 +113,7 @@ export default function Saved() {
 
         <FlatList
           data={savedMovies}
+          // 2. The MovieCard will now receive 'media_type' and redirect correctly
           renderItem={({ item }) => <MovieCard {...item} />}
           keyExtractor={(item) => item.id.toString()}
           numColumns={3}

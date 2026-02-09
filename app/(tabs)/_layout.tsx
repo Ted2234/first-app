@@ -54,10 +54,31 @@ const _layout = () => {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
+          title: "Movies",
           headerShown: false,
           tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} icon={icons.home} title="Home" />
+            <TabIcon
+              focused={focused}
+              icon={icons.movie}
+              title="Movies"
+              className="size-5"
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="shows"
+        options={{
+          title: "Shows",
+          headerShown: false,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              focused={focused}
+              icon={icons.shows}
+              title="Shows"
+              className="size-5"
+            />
           ),
         }}
       />

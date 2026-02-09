@@ -13,6 +13,9 @@ interface Movie {
   video: boolean;
   vote_average: number;
   vote_count: number;
+  name?: string;
+  media_type?: "movie" | "tv";
+  first_air_date?: string;
 }
 
 interface TrendingMovie {
@@ -20,7 +23,10 @@ interface TrendingMovie {
   movie_id: number;
   title: string;
   count: number;
-  poster_url: string;
+  poster_url?: string;
+  media_type?: "movie" | "tv";
+  poster_path?: string; // Add this
+  type?: string;
 }
 
 interface MovieDetails {

@@ -110,9 +110,10 @@ interface MovieData {
   poster_path: string;
   vote_average: number;
   release_date: string;
+  type?: "movie" | "tv";
 }
 
-export const saveMovie = async (userId: string, movie: MovieData) => {
+export const saveMovie = async (userId: string, movieData: any) => {
   try {
     const result = await database.createDocument(
       config.databaseId,
@@ -120,11 +121,12 @@ export const saveMovie = async (userId: string, movie: MovieData) => {
       ID.unique(),
       {
         user_id: userId,
-        movie_id: movie.id,
-        title: movie.title,
-        poster_path: movie.poster_path,
-        vote_average: movie.vote_average,
-        release_date: movie.release_date,
+        movie_id: movieData.id,
+        title: movieData.title,
+        poster_path: movieData.poster_path,
+        vote_average: movieData.vote_average,
+        release_date: movieData.release_date,
+        type: movieData.type || "movie",
       },
     );
     return result;
@@ -167,7 +169,10 @@ export const updateSearchCount = async (query: string, movies: Movie) => {
     const result = await database.listDocuments({
       databaseId: config.databaseId,
       collectionId: config.collectionId,
-      queries: [Query.equal("searchTerm", query)],
+      queries: [
+        Query.equal("searchTerm", query),
+        Query.equal("type", movies.media_type || "movie"),
+      ],
     });
 
     if (result.documents.length > 0) {
@@ -188,6 +193,7 @@ export const updateSearchCount = async (query: string, movies: Movie) => {
         ID.unique(),
         {
           searchTerm: query,
+          type: movies.media_type || "movie",
           movie_id: movies.id,
           count: 1,
           title: movies.title,
@@ -208,7 +214,29 @@ export const getTrendingMovies = async (): Promise<
     const result = await database.listDocuments({
       databaseId: config.databaseId,
       collectionId: config.collectionId,
-      queries: [Query.orderDesc("count"), Query.limit(5)],
+      queries: [
+        Query.orderDesc("count"),
+        Query.limit(5),
+        Query.equal("type", "movie"),
+      ],
+    });
+    return result.documents as unknown as TrendingMovie[];
+  } catch (error) {
+    console.log(error);
+    return undefined;
+  }
+};
+
+export const getTrendingTV = async (): Promise<TrendingMovie[] | undefined> => {
+  try {
+    const result = await database.listDocuments({
+      databaseId: config.databaseId,
+      collectionId: config.collectionId,
+      queries: [
+        Query.orderDesc("count"),
+        Query.limit(5),
+        Query.equal("type", "tv"),
+      ],
     });
     return result.documents as unknown as TrendingMovie[];
   } catch (error) {

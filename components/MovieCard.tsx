@@ -1,5 +1,5 @@
 import { icons } from "@/constants/icons";
-import { Link } from "expo-router";
+import { Href, Link } from "expo-router";
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 
@@ -9,9 +9,13 @@ const MovieCard = ({
   title,
   vote_average,
   release_date,
+  media_type,
 }: Movie) => {
+  const isTV = media_type === "tv";
+  const hrefPath = (isTV ? `/tv/${id}` : `/movies/${id}`) as Href;
+
   return (
-    <Link href={`/movies/${id}`} asChild>
+    <Link href={hrefPath} asChild>
       <TouchableOpacity className="w-[30%]">
         <Image
           source={{
